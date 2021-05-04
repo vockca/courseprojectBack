@@ -4,7 +4,7 @@ const port = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
     res.set('Access-Control-Allow-Origin', '*')
-    res.send(JSON.stringify('Hello World!'));
+    res.send(JSON.stringify('Hello Me!'));
 })
 
 app.listen(port, () => {
