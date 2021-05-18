@@ -11,12 +11,13 @@ const saltRounds = 10;
 
 app.use(cookieParser());
 app.use(cors({
-    origin: 'http://localhost',
+    //origin: 'http://localhost',
+    origin: 'https://gracious-jennings-2eaa14.netlify.app',
     credentials: true }));
 app.use(express.json());
-//app.use(express.urlencoded());
 
-const connection = MySqlHelper.initialize('localhost','root','Djghjc1999', 'crowdfundingsite');
+//const connection = MySqlHelper.initialize('localhost','root','Djghjc1999', 'crowdfundingsite');
+const connection = MySqlHelper.initialize('us-cdbr-east-03.cleardb.com','b052c723b05660','1770549d', 'heroku_9202c60e1f8bc22');
 
 connection.connect();
 

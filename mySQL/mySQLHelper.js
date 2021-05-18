@@ -7,7 +7,7 @@ const MySqlObj = {
 const MySqlHelper = {
     initialize: (host, user, password, database) => {
         return MySqlObj.connection = mysql.createConnection({
-            host     :  host,
+            host     : host,
             user     : user,
             password : password,
             database : database,
