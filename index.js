@@ -17,7 +17,7 @@ const whitelist = ['http://localhost', 'http://gracious-jennings-2eaa14.netlify.
 
 app.use(cookieParser());
 app.use(cors({
-    origin: 'http://gracious-jennings-2eaa14.netlify.app',
+    origin: 'https://gracious-jennings-2eaa14.netlify.app',
     credentials: true,}
 app.use(express.json());
 
