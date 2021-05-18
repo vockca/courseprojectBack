@@ -11,8 +11,8 @@ const saltRounds = 10;
 
 app.use(cookieParser());
 app.use(cors({
-    origin: 'http://localhost',
-    //origin: 'https://gracious-jennings-2eaa14.netlify.app',
+    //origin: 'http://localhost',
+    origin: 'https://gracious-jennings-2eaa14.netlify.app',
     credentials: true }));
 app.use(express.json());
 
