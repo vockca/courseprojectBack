@@ -9,16 +9,13 @@ const port = process.env.PORT || 3000;
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
-const whitelist = ['http://localhost', 'http://gracious-jennings-2eaa14.netlify.app/', 'https://gracious-jennings-2eaa14.netlify.app/',
-    'http://gracious-jennings-2eaa14.netlify.app', 'https://gracious-jennings-2eaa14.netlify.app' ]
-
 //origin: 'http://localhost',
 //origin: 'https://gracious-jennings-2eaa14.netlify.app',
 
 app.use(cookieParser());
 app.use(cors({
-    origin: 'https://gracious-jennings-2eaa14.netlify.app',
-    credentials: true,}
+    origin: 'http://localhost',
+    credentials: true,}))
 app.use(express.json());
 
 //const connection = MySqlHelper.initialize('localhost','root','Djghjc1999', 'crowdfundingsite');
