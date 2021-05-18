@@ -22,8 +22,8 @@ const connection = MySqlHelper.initialize('us-cdbr-east-03.cleardb.com','b052c72
 connection.connect();
 
 app.get("/userInfo", (req, res) => {
-    const userCookieJwt = req.cookies['USER'];
-    //console.log(req.cookies['USER']);
+    const userCookieJwt = req.body;
+    console.log(req.body);
 
 
     jwt.verify(userCookieJwt, 'verySecretWord', function(err, decoded) {
