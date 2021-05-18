@@ -12,10 +12,8 @@ const saltRounds = 10;
 //origin: 'http://localhost',
 //origin: 'https://gracious-jennings-2eaa14.netlify.app',
 
+app.use(cors());
 app.use(cookieParser());
-app.use(cors({
-    origin: 'http://localhost',
-    credentials: true,}))
 app.use(express.json());
 
 //const connection = MySqlHelper.initialize('localhost','root','Djghjc1999', 'crowdfundingsite');
