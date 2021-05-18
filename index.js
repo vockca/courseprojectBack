@@ -9,10 +9,11 @@ const port = process.env.PORT || 3000;
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
+//origin: 'http://localhost',
+//origin: 'https://gracious-jennings-2eaa14.netlify.app',
+
 app.use(cookieParser());
 app.use(cors({
-    //origin: 'http://localhost',
-    origin: 'https://gracious-jennings-2eaa14.netlify.app',
     credentials: true }));
 app.use(express.json());
 
