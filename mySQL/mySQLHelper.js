@@ -6,13 +6,39 @@ const MySqlObj = {
 
 const MySqlHelper = {
     initialize: (host, user, password, database) => {
-        return MySqlObj.connection = mysql.createConnection({
+        return MySqlObj.connection = mysql.createPool({
             host     : host,
             user     : user,
             password : password,
             database : database,
         })
     },
+
+    // handleDisconnect: (host, user, password, database) => {
+    //
+    //     function handleDisconnect(host, user, password, database) {
+    //         MySqlHelper.initialize(host, user, password, database); // Recreate the connection, since
+    //                                                         // the old one cannot be reused.
+    //
+    //         MySqlObj.connection.connect(function(err) {              // The server is either down
+    //             if(err) {                                     // or restarting (takes a while sometimes).
+    //                 console.log('error when connecting to db:', err);
+    //                 setTimeout(() => handleDisconnect(host, user, password, database), 2000); // We introduce a delay before attempting to reconnect,
+    //             }                                     // to avoid a hot loop, and to allow our node script to
+    //         });                                     // process asynchronous requests in the meantime.
+    //                                                 // If you're also serving http, display a 503 error.
+    //         MySqlObj.connection.on('error', function(err) {
+    //             console.log('db error', err);
+    //             if(err.code === 'PROTOCOL_CONNECTION_LOST') { // Connection to the MySQL server is usually
+    //                 handleDisconnect(host, user, password, database);                         // lost due to either server restart, or a
+    //             } else {                                      // connnection idle timeout (the wait_timeout
+    //                 throw err;                                  // server variable configures this)
+    //             }
+    //         });
+    //     }
+    //
+    //     handleDisconnect(host, user, password, database);
+    // },
 
     registerUser: (login, firstName, lastName, email, password, res) => {
         const sqlLine = `insert into users SET user_login='${login}', user_firstname='${firstName}', user_lastname='${lastName}', user_email='${email}', user_password='${password}'`;

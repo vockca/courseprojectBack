@@ -17,9 +17,9 @@ app.use(cookieParser());
 app.use(express.json());
 
 //const connection = MySqlHelper.initialize('localhost','root','Djghjc1999', 'crowdfundingsite');
-const connection = MySqlHelper.initialize('us-cdbr-east-03.cleardb.com','b052c723b05660','1770549d', 'heroku_9202c60e1f8bc22');
+MySqlHelper.initialize('us-cdbr-east-03.cleardb.com','b052c723b05660','1770549d', 'heroku_9202c60e1f8bc22');
 
-connection.connect();
+//MySqlHelper.handleDisconnect('us-cdbr-east-03.cleardb.com','b052c723b05660','1770549d', 'heroku_9202c60e1f8bc22')
 
 app.post("/userInfo", (req, res) => {
     const userCookieJwt = req.body.token;
