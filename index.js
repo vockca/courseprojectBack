@@ -21,10 +21,9 @@ const connection = MySqlHelper.initialize('us-cdbr-east-03.cleardb.com','b052c72
 
 connection.connect();
 
-app.get("/userInfo", (req, res) => {
-    const userCookieJwt = req.body;
-    console.log(req.body);
-
+app.post("/userInfo", (req, res) => {
+    const userCookieJwt = req.body.token;
+    console.log(req.body.token);
 
     jwt.verify(userCookieJwt, 'verySecretWord', function(err, decoded) {
         console.log(decoded);
@@ -45,11 +44,9 @@ app.get("/userInfo", (req, res) => {
         }
     });
 
-    console.log('user connected');
 });
 
 app.get("/campaigns", (req, res) => {
-    console.log('user connected');
     MySqlHelper.getCampaings((campaigns) => {
         if (campaigns.length === 0) {
             res.status(200).json(
@@ -69,7 +66,6 @@ app.get("/campaigns", (req, res) => {
 app.get('/MainPage/campaignDetails/:id', (req, res) => {
     const id = req.params.id;
     MySqlHelper.getCampaignInfo(id,(campaign) => {
-        console.log(campaign[0]);
         if (campaign.length === 0) {
             res.send(
                 {
@@ -119,16 +115,13 @@ app.post("/LogIn", async (req, res) => {
                 const token = jwt.sign({
                         login: body.login,
                         password: body.password,
-                    }, 'verySecretWord', { expiresIn: 60 * 60 * 1000}
+                    }, 'verySecretWord', {expiresIn: 60 * 60 * 1000}
                 );
-
-                res.cookie('USER', token, { maxAge: (60 * 60 * 1000), httpOnly: false  });
-
                 res.status(200).json(
                     {
-                            msg:"you are authorized",
-                            data: body.login,
-                        });
+                        msg:"you are authorized",
+                        data: token,
+                    });
             } else {
                 res.status(400).json(
                     {
