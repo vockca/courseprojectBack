@@ -40,24 +40,57 @@ const MySqlHelper = {
     //     handleDisconnect(host, user, password, database);
     // },
 
-    registerUser: (login, firstName, lastName, email, password, res) => {
-        const sqlLine = `insert into users SET user_login='${login}', user_firstname='${firstName}', user_lastname='${lastName}', user_email='${email}', user_password='${password}'`;
+    registerUser: (userObj, password, callback) => {
+        const isAdmin = (userObj.login === 'admin');
+        const sqlLine = `insert into users SET user_login='${userObj.login}', user_firstname='${userObj.firstName}', user_lastname='${userObj.lastName}', user_email='${userObj.email}', user_password='${password}', user_isAdmin=${isAdmin}`;
         MySqlObj.connection.query(sqlLine, function(err) {
-                if (err) {
-                    console.log(err);
-                    if (err.code === 'ER_DUP_ENTRY') {
-                        res.status(400).json({ msg: 'Such user already exists!'});
-                    }
-                }
-                else {
-                    res.status(200).json({msg: 'user registered'});
-                    console.log('we did it')
-                }
+            if (err) {
+                console.log(err);
+                callback(null, err);
+            }
+            else {
+                callback({});
+            }
+        });
+    },
+
+    deleteUser: (userId, callback) => {
+        const  sqlLine = `DELETE FROM users WHERE user_id = ${userId}`;
+        MySqlObj.connection.query(sqlLine, (err, data) => {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log(data);
+                callback(data);
+            }
+        });
+    },
+
+    changeValue: (column, value, userId, callback) => {
+        const  sqlLine = `UPDATE users SET ${column} = ${value} WHERE user_id = ${userId};`
+        MySqlObj.connection.query(sqlLine, (err, data) => {
+            if (err) {
+                console.log(err);
+                callback(null, err);
+            } else {
+                callback(data);
+            }
+        });
+    },
+
+    getUsers: (callback) => {
+        const  sqlLine = `SELECT * FROM users;`
+        MySqlObj.connection.query(sqlLine, (err, data) => {
+            if (err) {
+                console.log(err);
+            } else {
+                callback(data);
+            }
         });
     },
 
     getUserInfo: (userLogin, callback) => {
-        const  sqlLine = `SELECT user_id, user_email, user_login, user_firstname, user_lastname FROM users WHERE user_login='${userLogin}';`
+        const  sqlLine = `SELECT user_id, user_email, user_login, user_firstname, user_lastname, user_isAdmin, user_isBanned FROM users WHERE user_login='${userLogin}';`
         MySqlObj.connection.query(sqlLine, (err, data) => {
             if (err) {
                 console.log(err);
@@ -67,23 +100,50 @@ const MySqlHelper = {
         });
     },
 
-    createCampaign: (campaignName, bonuses, campaignTheme, campaignVideo, moneyAmount, campaignInfo, campaignPictures, campaignTags, campaignCreatorName, res) => {
-        const sqlLine = `insert into campaigns SET campaign_name='${campaignName}', campaign_bonuses='${bonuses}',`+
-`campaign_theme='${campaignTheme}',campaign_money_amount=${moneyAmount}, campaign_video='${campaignVideo}',`+
-`campaign_pictures='${campaignPictures}', campaign_info='${campaignInfo}', campaign_tags='${campaignTags}',`+
-`campaign_creator_name='${campaignCreatorName}', campaign_latest_update='${Date.now()}'`;
+    getSpecialUserInfoById: (column, userId, callback) => {
+        const  sqlLine = `SELECT ${column} FROM users WHERE user_id='${userId}';`
+        MySqlObj.connection.query(sqlLine, (err, data) => {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log(data[0]);
+                callback(data[0]);
+            }
+        });
+    },
+
+    updateUserInfo: (userObject, callback) => {
+        const  sqlLine = `UPDATE users SET user_login = '${userObject['user_login']}', user_email = '${userObject['user_email']}', user_firstname = '${userObject['user_firstname']}', user_lastname = '${userObject['user_lastname']}'` +
+        `WHERE user_id = ${userObject['user_id']}`;
+        MySqlObj.connection.query(sqlLine, function(err) {
+            if (err) {
+                console.log(err);
+                callback(null, err);
+            }
+            else {
+                callback('');
+            }
+        });
+    },
+
+
+    createCampaign: (userObj, campaignObj, imgs, callback) => {
+        const sqlLine = `insert into campaigns SET campaign_name='${campaignObj.campaignName}', campaign_bonuses='${campaignObj.bonuses}',`+
+`campaign_theme='${campaignObj.campaignTheme}',campaign_money_amount=${campaignObj.moneyAmount}, campaign_video='${campaignObj.campaignVideo}',`+
+`campaign_pictures='${imgs}', campaign_info='${campaignObj.campaignInfo}', campaign_tags='${campaignObj.tags}',`+
+`campaign_creator_id='${userObj['user_id']}', campaign_latest_update='${Date.now()}'`;
         MySqlObj.connection.query(sqlLine, function(err) {
                 if (err) {
                     console.log(err);
-                    if (err.code === 'ER_DUP_ENTRY') {
-                        res.status(400).json({ msg: 'Such user already exists!'});
-                    }
+                    callback(null, err);
                 }
                 else {
-                    res.status(200).json({msg: 'campaign successfully created'});
-                    console.log('campaign created')
+                    callback({
+                        msg: 'campaign successfully created',
+                        data: '',
+                    });
                 }
-            });
+        });
     },
 
     getCampaings : async (callback) => {
@@ -93,11 +153,23 @@ const MySqlHelper = {
         })
     },
 
+    getTags : async (callback) => {
+        const  sqlLine = 'SELECT campaign_tags FROM campaigns';
+        MySqlObj.connection.query(sqlLine, async (err, result) => {
+            callback(JSON.parse(JSON.stringify(result)));
+        })
+    },
+
     getCampaignInfo : async (campaignId, callback) => {
     const  sqlLine = `SELECT * FROM campaigns WHERE campaign_id="${campaignId}"`;
     MySqlObj.connection.query(sqlLine, async (err, result) => {
-       // console.log(JSON.parse(JSON.stringify(result)));
-        callback(JSON.parse(JSON.stringify(result)));
+        const obj = JSON.parse(JSON.stringify(result));
+
+        const  sqlLine2 = `SELECT user_login FROM users WHERE user_id="${result[0]['campaign_creator_id']}"`
+        MySqlObj.connection.query(sqlLine2, async (err, result) => {
+            obj[0]['user'] = JSON.parse(JSON.stringify(result[0]));
+            callback(obj);
+        });
     });
 },
 
@@ -136,7 +208,6 @@ const MySqlHelper = {
             // else {
             //     res.status(400).json({msg: "Incorrect password!"})
             // }
-
         });
     },
 }
