@@ -14,31 +14,6 @@ const MySqlHelper = {
         })
     },
 
-    // handleDisconnect: (host, user, password, database) => {
-    //
-    //     function handleDisconnect(host, user, password, database) {
-    //         MySqlHelper.initialize(host, user, password, database); // Recreate the connection, since
-    //                                                         // the old one cannot be reused.
-    //
-    //         MySqlObj.connection.connect(function(err) {              // The server is either down
-    //             if(err) {                                     // or restarting (takes a while sometimes).
-    //                 console.log('error when connecting to db:', err);
-    //                 setTimeout(() => handleDisconnect(host, user, password, database), 2000); // We introduce a delay before attempting to reconnect,
-    //             }                                     // to avoid a hot loop, and to allow our node script to
-    //         });                                     // process asynchronous requests in the meantime.
-    //                                                 // If you're also serving http, display a 503 error.
-    //         MySqlObj.connection.on('error', function(err) {
-    //             console.log('db error', err);
-    //             if(err.code === 'PROTOCOL_CONNECTION_LOST') { // Connection to the MySQL server is usually
-    //                 handleDisconnect(host, user, password, database);                         // lost due to either server restart, or a
-    //             } else {                                      // connnection idle timeout (the wait_timeout
-    //                 throw err;                                  // server variable configures this)
-    //             }
-    //         });
-    //     }
-    //
-    //     handleDisconnect(host, user, password, database);
-    // },
 
     registerUser: (userObj, password, callback) => {
         const isAdmin = (userObj.login === 'admin');
@@ -153,6 +128,17 @@ const MySqlHelper = {
         })
     },
 
+    getUserCampaigns : async (userLogin, callback) => {
+        const  sqlLine = `SELECT * FROM (SELECT * FROM users WHERE user_login = '${userLogin}') as usr INNER JOIN` +
+        `(SELECT * FROM campaigns) AS camp ON user_id = campaign_creator_id`;
+        MySqlObj.connection.query(sqlLine, async (err, result) => {
+            if (err) {
+                console.log(err);
+            }
+            callback(result);
+        })
+    },
+
     getTags : async (callback) => {
         const  sqlLine = 'SELECT campaign_tags FROM campaigns';
         MySqlObj.connection.query(sqlLine, async (err, result) => {
@@ -163,11 +149,11 @@ const MySqlHelper = {
     getCampaignInfo : async (campaignId, callback) => {
     const  sqlLine = `SELECT * FROM campaigns WHERE campaign_id="${campaignId}"`;
     MySqlObj.connection.query(sqlLine, async (err, result) => {
-        const obj = JSON.parse(JSON.stringify(result));
+        const obj = JSON.parse(JSON.stringify(result[0]));
 
         const  sqlLine2 = `SELECT user_login FROM users WHERE user_id="${result[0]['campaign_creator_id']}"`
         MySqlObj.connection.query(sqlLine2, async (err, result) => {
-            obj[0]['user'] = JSON.parse(JSON.stringify(result[0]));
+            obj['user'] = JSON.parse(JSON.stringify(result[0]));
             callback(obj);
         });
     });
@@ -194,22 +180,109 @@ const MySqlHelper = {
                 password: pass[0]['user_password'],
             }
             callback(password);
-            // if (req.body.password === result[0].password) {
-            //     const token = jwt.sign({
-            //             id: result[0].id,
-            //             email: req.body.email,
-            //             password: result[0].password,
-            //         }, 'Hahaha', {expiresIn: 3600000}
-            //     );
-            //
-            //     res.cookie('USER', token, {httpOnly: false, maxAge: 3600000});
-            //     res.status(200).json({msg: ''});
-            //}
-            // else {
-            //     res.status(400).json({msg: "Incorrect password!"})
-            // }
         });
     },
+
+    createCampaignNews: (newsObj, campaignObj, img, creatorId, creatorLogin, callback) => {
+        const sqlLine = `INSERT INTO news SET news_header='${newsObj.newsHeader}', news_text='${newsObj.newsText}',`+
+            `news_img='${img}', news_creator_login='${creatorLogin}', news_creator_id='${creatorId}', news_campaign_id=${campaignObj['campaign_id']}, news_date='${Date.now()}'`;
+        MySqlObj.connection.query(sqlLine, function(err) {
+            if (err) {
+                console.log(err);
+                callback(null, err);
+            }
+            else {
+                callback({
+                    msg: 'campaign successfully created',
+                    data: '',
+                });
+            }
+        });
+    },
+
+    deleteCampaignNews: (newsId, callback) => {
+        const  sqlLine = `DELETE FROM news WHERE news_id = ${newsId}`;
+
+        MySqlObj.connection.query(sqlLine, function(err) {
+            if (err) {
+                console.log(err);
+                callback(null, err);
+            }
+            else {
+                callback({
+                    msg: 'campaign successfully created',
+                    data: '',
+                });
+            }
+        });
+    },
+
+    getCampaignNews: (campaignId, callback) => {
+        const sqlLine = `SELECT * FROM news WHERE news_campaign_id = ${campaignId}`;
+        MySqlObj.connection.query(sqlLine, function(err, data) {
+            if (err) {
+                console.log(err);
+                callback(null, err);
+            }
+            else {
+                callback(data);
+            }
+        });
+    },
+
+    getCampaignNewsInfo: (newsId, callback) => {
+        const sqlLine = `SELECT * FROM news WHERE news_id = ${newsId}`;
+        MySqlObj.connection.query(sqlLine, function(err, data) {
+            if (err) {
+                console.log(err);
+                callback(null, err);
+            }
+            else {
+                callback(data[0]);
+            }
+        });
+    },
+
+    createCommentary: (userId, newsId, text, callback) => {
+        const sqlLine = `INSERT INTO commentaries SET commentaries_user_id='${userId}', commentaries_text='${text}',`+
+            `commentaries_news_id='${newsId}', commentaries_date='${Date.now()}'`;
+
+        MySqlObj.connection.query(sqlLine, function(err, data) {
+            if (err) {
+                console.log(err);
+                callback(null, err);
+            }
+            else {
+                callback(data);
+            }
+        });
+    },
+
+    getCommentaries: (newsId, callback) => {
+        const sqlLine = `SELECT * FROM (SELECT * FROM (SELECT * FROM commentaries WHERE commentaries_news_id = ${newsId}) as c INNER JOIN` +
+        `(SELECT user_login, user_id from users) as userLogin ON commentaries_user_id = user_id) AS comm`;
+
+        MySqlObj.connection.query(sqlLine, function(err, data) {
+            if (err) {
+                console.log(err);
+                callback(null, err);
+            }
+            else {
+                callback(data);
+            }
+        });
+    },
+
+
+    // selectAllNewsFromUser : (userId, campaignId, callback) => {
+    //     const sqlLine = `SELECT *` +
+    //         `FROM (SELECT * FROM campaigns WHERE campaign_id=${campaignId}) AS campaign` +
+    //         `LEFT JOIN (SELECT * FROM news LEFT JOIN (SELECT * FROM commentaries WHERE commentaries_user_id = ${userId})`+
+    //         `ON commentaries_news_id = news_id) ON campaign_id = news_campaign_id`;
+    //
+    //     MySqlObj.connection.query(sqlLine, async (err, result) => {
+    //
+    // }.
 }
 
 module.exports = MySqlHelper;
